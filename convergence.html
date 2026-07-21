@@ -7,6 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#27221E">
+<link rel="apple-touch-icon" href="icon-dark-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-dark-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-dark-512.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Convergence</title>
 <style>
   :root{
@@ -122,8 +126,8 @@
   }
   .howLine .pearlDot{
     flex:0 0 22px;height:22px;border-radius:50%;margin-top:1px;
-    background:radial-gradient(circle at 34% 30%, #ffffff 0%, #faf6ec 30%, #e8ddd6 60%, #cfc0c8 82%, #b9c4bc 100%);
-    box-shadow:0 1px 5px rgba(0,0,0,0.18), inset -1px -2px 4px rgba(150,130,140,0.3);
+    background:radial-gradient(circle at 33% 30%, #fbefc8 0%, #e8c878 24%, #c69a4c 52%, #8e6a31 80%, #5c4420 100%);
+    box-shadow:0 1px 4px rgba(0,0,0,0.22), inset -1px -2px 4px rgba(70,50,22,0.4);
   }
   .primary{
     width:100%;margin-top:6px;
@@ -179,7 +183,7 @@
     <div id="score">0</div>
     <div id="best">Best 0</div>
   </div>
-  <div id="title">CONVERGENCE</div>
+  <div id="title" aria-hidden="true"></div>
   <div id="btns">
     <button class="btn" id="modeBtn" aria-label="Light or dark mode">&#9681;</button>
     <button class="btn" id="helpBtn" aria-label="How to play">?</button>
@@ -197,7 +201,7 @@
     <div class="howLine"><div class="mark">1</div><div>Touch and drag anywhere to aim. Lift your finger to launch.</div></div>
     <div class="howLine"><div class="mark">2</div><div>Join three or more of the same color and they draw together and dissolve. Anything left hanging falls with them.</div></div>
     <div class="howLine"><div class="mark">3</div><div>Every few shots, a new row settles in from above. Keep the field above the line.</div></div>
-    <div class="howLine"><div class="pearlDot"></div><div>Pearls are rare. Launch one and it clears everything it touches, whatever the color.</div></div>
+    <div class="howLine"><div class="pearlDot"></div><div>The brass ball is rare. Launch it and it clears everything it touches, whatever the color.</div></div>
     <button class="primary" id="helpClose">Begin</button>
   </div>
 </div>
@@ -597,38 +601,48 @@ function softHighlight(g, x, y, rx, ry, rot, fill){
 }
 
 function makePearlTex(){
-  /* the ONE glossy object in a matte world */
+  /* the ONE polished metal object — a brass ball, echoing the compass needle's
+     material but spherical and gleaming where the needle is flat and matte */
   var size = texSize();
   var cnv = document.createElement('canvas');
   cnv.width = size; cnv.height = size;
   var g = cnv.getContext('2d');
   var c = size/2, r = size/2-3;
 
-  var grad = g.createRadialGradient(c-r*0.38, c-r*0.42, r*0.08, c, c, r*1.1);
-  grad.addColorStop(0,   '#FFFFFF');
-  grad.addColorStop(0.35,'#FBF7EE');
-  grad.addColorStop(0.7, '#EBE1D8');
-  grad.addColorStop(1,   '#CDBDB6');
+  /* warm brass sphere: bright upper-left, deep warm shadow lower-right */
+  var grad = g.createRadialGradient(c-r*0.4, c-r*0.44, r*0.05, c-r*0.1, c-r*0.1, r*1.25);
+  grad.addColorStop(0,   '#FBEFC8');   /* near-highlight */
+  grad.addColorStop(0.22,'#E8C878');
+  grad.addColorStop(0.5, '#C69A4C');
+  grad.addColorStop(0.78,'#8E6A31');
+  grad.addColorStop(1,   '#5C4420');   /* deep brass shadow */
   g.beginPath(); g.arc(c,c,r,0,Math.PI*2); g.fillStyle = grad; g.fill();
 
   g.save(); clipCircle(g,c,r);
-  /* iridescent nacre washes */
-  var tints = ['rgba(168,199,193,0.28)','rgba(197,168,196,0.26)','rgba(214,196,158,0.24)','rgba(164,178,205,0.22)'];
-  for (var i=0;i<tints.length;i++){
-    var a0 = i*(Math.PI/2)+0.4;
-    var gr = g.createRadialGradient(
-      c+Math.cos(a0)*r*0.55, c+Math.sin(a0)*r*0.55, 0,
-      c+Math.cos(a0)*r*0.55, c+Math.sin(a0)*r*0.55, r*0.9);
-    gr.addColorStop(0, tints[i]); gr.addColorStop(1,'rgba(255,255,255,0)');
-    g.fillStyle = gr;
-    g.fillRect(0,0,size,size);
-  }
-  /* glossy rim + specular highlight — pristine finish */
-  g.lineWidth = Math.max(1.5, r*0.12);
-  g.strokeStyle = 'rgba(130,108,118,0.30)';
-  g.beginPath(); g.arc(c,c,r-g.lineWidth*0.4, Math.PI*0.05, Math.PI*0.8); g.stroke();
-  softHighlight(g, c-r*0.34, c-r*0.4, r*0.24, r*0.14, -0.6, 'rgba(255,255,255,0.85)');
-  softHighlight(g, c+r*0.28, c+r*0.34, r*0.12, r*0.07, -0.6, 'rgba(255,255,255,0.30)');
+
+  /* reflected warm light bouncing up into the lower rim — the tell of a metal sphere */
+  var rl = g.createRadialGradient(c+r*0.28, c+r*0.5, 0, c+r*0.28, c+r*0.5, r*0.7);
+  rl.addColorStop(0,'rgba(240,200,120,0.55)');
+  rl.addColorStop(1,'rgba(240,200,120,0)');
+  g.fillStyle = rl;
+  g.fillRect(0,0,size,size);
+
+  /* faint equatorial band — a horizon reflection, sells the polish */
+  var band = g.createLinearGradient(0, c-r*0.15, 0, c+r*0.2);
+  band.addColorStop(0,'rgba(255,240,200,0)');
+  band.addColorStop(0.5,'rgba(255,238,196,0.18)');
+  band.addColorStop(1,'rgba(120,90,40,0)');
+  g.fillStyle = band;
+  g.fillRect(c-r, c-r*0.15, r*2, r*0.35);
+
+  /* polished rim darkening */
+  g.lineWidth = Math.max(1.5, r*0.13);
+  g.strokeStyle = 'rgba(70,50,22,0.4)';
+  g.beginPath(); g.arc(c,c,r-g.lineWidth*0.4, Math.PI*0.05, Math.PI*0.85); g.stroke();
+
+  /* bright specular hotspot + secondary glint */
+  softHighlight(g, c-r*0.36, c-r*0.42, r*0.22, r*0.13, -0.6, 'rgba(255,250,232,0.92)');
+  softHighlight(g, c-r*0.18, c-r*0.24, r*0.09, r*0.05, -0.6, 'rgba(255,255,245,0.7)');
   g.restore();
   return cnv;
 }
@@ -672,28 +686,27 @@ function drawBubble(x, y, val, scale, alpha){
   var s = (R*2+3) * (scale===undefined?1:scale);
   if (alpha !== undefined && alpha < 1) { ctx.save(); ctx.globalAlpha = Math.max(0,alpha); }
   if (val === PEARL){
-    /* soft halo — luminous among matte */
+    /* soft warm halo — a glint of gold among matte */
     ctx.save();
-    var glow = ctx.createRadialGradient(x,y,s*0.3, x,y,s*0.85);
-    glow.addColorStop(0,'rgba(255,252,244,0.14)');
-    glow.addColorStop(1,'rgba(255,252,244,0)');
+    var glow = ctx.createRadialGradient(x,y,s*0.32, x,y,s*0.82);
+    glow.addColorStop(0,'rgba(240,205,120,0.16)');
+    glow.addColorStop(1,'rgba(240,205,120,0)');
     ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(x,y,s*0.85,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,s*0.82,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
   ctx.drawImage(tex, x-s/2, y-s/2, s, s);
   if (val === PEARL && !REDUCED){
-    /* live gleam sweep — glossy is the point here */
-    var t = now()/1400;
+    /* live gold gleam sweep — the polished surface catching light */
+    var t = now()/1600;
     var a = (t % (Math.PI*2));
     ctx.save();
     ctx.beginPath(); ctx.arc(x,y,s/2-1.5,0,Math.PI*2); ctx.clip();
-    ctx.globalAlpha = (alpha===undefined?1:alpha)*0.22;
-    var hue = (now()/40)%360;
+    ctx.globalAlpha = (alpha===undefined?1:alpha)*0.28;
     var gr = ctx.createLinearGradient(x-Math.cos(a)*s/2, y-Math.sin(a)*s/2, x+Math.cos(a)*s/2, y+Math.sin(a)*s/2);
-    gr.addColorStop(0.25,'rgba(255,255,255,0)');
-    gr.addColorStop(0.5,'hsla('+hue+',45%,82%,0.9)');
-    gr.addColorStop(0.75,'rgba(255,255,255,0)');
+    gr.addColorStop(0.30,'rgba(255,240,200,0)');
+    gr.addColorStop(0.5,'rgba(255,246,214,0.85)');
+    gr.addColorStop(0.70,'rgba(255,240,200,0)');
     ctx.fillStyle = gr;
     ctx.fillRect(x-s/2,y-s/2,s,s);
     ctx.restore();
@@ -1112,14 +1125,11 @@ function addScore(pts, x, y, note){
 }
 
 /* ============================== input ============================== */
+/* relative aiming: touch anywhere, drag to rotate. horizontal movement
+   turns the needle; the aim persists between shots. */
 
-function angleFrom(x, y){
-  var a = Math.atan2(y - cannonY, x - cannonX);
-  /* keep upward, with margin */
-  var min = -Math.PI + 0.18, max = -0.18;
-  if (a > 0) a = (x < cannonX) ? min : max;
-  return clamp(a, min, max);
-}
+var AIM_MIN = -Math.PI + 0.18, AIM_MAX = -0.18;
+var aimStart = 0, touchStartX = 0, touchStartY = 0, dragMoved = false;
 
 function pos(ev){
   var rect = cv.getBoundingClientRect();
@@ -1132,13 +1142,20 @@ function onDown(ev){
   ev.preventDefault();
   var p = pos(ev);
   state.aiming = true;
-  state.aimAngle = angleFrom(p.x, p.y);
+  aimStart = state.aimAngle;      /* hold whatever we were aiming at */
+  touchStartX = p.x; touchStartY = p.y;
+  dragMoved = false;
 }
 function onMove(ev){
   if (!state.aiming) return;
   ev.preventDefault();
   var p = pos(ev);
-  state.aimAngle = angleFrom(p.x, p.y);
+  var dx = p.x - touchStartX, dy = p.y - touchStartY;
+  if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+  /* map horizontal travel to rotation. full sweep across ~1.4 screen widths.
+     drag right -> aim right (angle toward 0), drag left -> aim left. */
+  var sens = (AIM_MAX - AIM_MIN) / (W * 1.4);
+  state.aimAngle = clamp(aimStart + dx * sens, AIM_MIN, AIM_MAX);
 }
 function onUp(ev){
   if (!state.aiming) return;
