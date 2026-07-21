@@ -1125,11 +1125,12 @@ function addScore(pts, x, y, note){
 }
 
 /* ============================== input ============================== */
-/* relative aiming: touch anywhere, drag to rotate. horizontal movement
-   turns the needle; the aim persists between shots. */
+/* relative aiming: touch anywhere, drag to rotate. movement accumulates
+   incrementally, so the full arc is reachable from any starting point —
+   lift and re-drag to keep turning, never run out of screen. */
 
 var AIM_MIN = -Math.PI + 0.18, AIM_MAX = -0.18;
-var aimStart = 0, touchStartX = 0, touchStartY = 0, dragMoved = false;
+var lastMoveX = 0, touchStartX = 0, touchStartY = 0, dragMoved = false;
 
 function pos(ev){
   var rect = cv.getBoundingClientRect();
@@ -1142,7 +1143,7 @@ function onDown(ev){
   ev.preventDefault();
   var p = pos(ev);
   state.aiming = true;
-  aimStart = state.aimAngle;      /* hold whatever we were aiming at */
+  lastMoveX = p.x;                 /* track from here; aim itself is untouched */
   touchStartX = p.x; touchStartY = p.y;
   dragMoved = false;
 }
@@ -1150,12 +1151,13 @@ function onMove(ev){
   if (!state.aiming) return;
   ev.preventDefault();
   var p = pos(ev);
-  var dx = p.x - touchStartX, dy = p.y - touchStartY;
-  if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
-  /* map horizontal travel to rotation. full sweep across ~1.4 screen widths.
-     drag right -> aim right (angle toward 0), drag left -> aim left. */
-  var sens = (AIM_MAX - AIM_MIN) / (W * 1.4);
-  state.aimAngle = clamp(aimStart + dx * sens, AIM_MIN, AIM_MAX);
+  if (Math.abs(p.x-touchStartX) + Math.abs(p.y-touchStartY) > 3) dragMoved = true;
+  /* accumulate the delta since the LAST move — position is only a reference
+     point, not an anchor, so travel is unbounded. one full screen-width of
+     total drag sweeps the whole arc; do it in one stroke or several. */
+  var sens = (AIM_MAX - AIM_MIN) / (W * 0.82);
+  state.aimAngle = clamp(state.aimAngle + (p.x - lastMoveX) * sens, AIM_MIN, AIM_MAX);
+  lastMoveX = p.x;
 }
 function onUp(ev){
   if (!state.aiming) return;
