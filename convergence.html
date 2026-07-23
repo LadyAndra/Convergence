@@ -118,6 +118,45 @@
     font-size:13.5px;line-height:1.5;color:var(--cream-dim);
     margin-bottom:12px;
   }
+  .secLabel{
+    font-size:9px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--cream-faint);margin:16px 0 8px;
+  }
+  .secLabel:first-of-type{margin-top:4px;}
+  .segRow{display:flex;gap:6px;}
+  .seg{
+    flex:1;appearance:none;border:1px solid var(--line);background:transparent;
+    color:var(--cream-dim);border-radius:10px;height:40px;
+    font-family:var(--sans);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+    cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease;
+  }
+  .seg.on{border-color:rgba(234,226,211,0.5);color:var(--cream);background:rgba(234,226,211,0.08);}
+  body.light .seg.on{border-color:rgba(58,46,40,0.5);background:rgba(58,46,40,0.07);}
+  .sliderRow{display:flex;align-items:center;gap:10px;}
+  .sEnd{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--cream-faint);white-space:nowrap;}
+  #sensSlider{
+    flex:1;appearance:none;-webkit-appearance:none;height:26px;background:transparent;cursor:pointer;
+  }
+  #sensSlider::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px;}
+  #sensSlider::-moz-range-track{height:2px;background:var(--line);border-radius:2px;}
+  #sensSlider::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;margin-top:-9px;
+    background:radial-gradient(circle at 33% 30%, #fbefc8 0%, #e8c878 26%, #c69a4c 56%, #8e6a31 84%, #5c4420 100%);
+    border:none;box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+  #sensSlider::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;border:none;
+    background:radial-gradient(circle at 33% 30%, #fbefc8 0%, #e8c878 26%, #c69a4c 56%, #8e6a31 84%, #5c4420 100%);
+  }
+  .sensHint{
+    font-size:10px;color:var(--cream-faint);text-align:center;margin-top:2px;letter-spacing:0.04em;
+  }
+  #statusLine{
+    font-family:var(--sans);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--cream-dim);font-variant-numeric:tabular-nums;
+  }
+  #statusLine.urgent{color:var(--amber);}
+  body.light #statusLine.urgent{color:#8A4A2E;}
   .howLine .mark{
     flex:0 0 22px;height:22px;border-radius:50%;
     border:1px solid var(--line);
@@ -183,11 +222,11 @@
     <div id="score">0</div>
     <div id="best">Best 0</div>
   </div>
-  <div id="title" aria-hidden="true"></div>
+  <div id="title" aria-hidden="true"><span id="statusLine"></span></div>
   <div id="btns">
     <button class="btn" id="modeBtn" aria-label="Light or dark mode">&#9681;</button>
     <button class="btn" id="helpBtn" aria-label="How to play">?</button>
-    <button class="btn" id="diffBtn" aria-label="Difficulty">Med</button>
+    <button class="btn" id="menuBtn" aria-label="Modes and settings">&#9776;</button>
     <button class="btn" id="restartBtn" aria-label="Restart">&#8635;</button>
   </div>
 </div>
@@ -198,10 +237,11 @@
 <div class="overlay" id="helpOverlay">
   <div class="panel">
     <h2>HOW TO PLAY</h2>
-    <div class="howLine"><div class="mark">1</div><div>Touch and drag anywhere to aim. Lift your finger to launch.</div></div>
+    <div class="howLine"><div class="mark">1</div><div>Drag anywhere to aim &mdash; the needle turns with your finger, wherever it starts. Lift to launch.</div></div>
     <div class="howLine"><div class="mark">2</div><div>Join three or more of the same color and they draw together and dissolve. Anything left hanging falls with them.</div></div>
     <div class="howLine"><div class="mark">3</div><div>Every few shots, a new row settles in from above. Keep the field above the line.</div></div>
     <div class="howLine"><div class="pearlDot"></div><div>The brass ball is rare. Launch it and it clears everything it touches, whatever the color.</div></div>
+    <div class="howLine"><div class="mark">&#9776;</div><div>Three modes: Relax runs forever, Score Attack gives you 30 shots and 90 seconds, Levels asks you to clear the board.</div></div>
     <button class="primary" id="helpClose">Begin</button>
   </div>
 </div>
@@ -209,32 +249,51 @@
 <!-- Game over -->
 <div class="overlay" id="overOverlay">
   <div class="panel">
-    <h2>GAME OVER</h2>
+    <h2 id="overTitle">GAME OVER</h2>
     <div id="finalScore">0</div>
     <div id="finalLabel">Final score</div>
     <div id="finalBest">Best 0</div>
     <button class="primary" id="againBtn">Play again</button>
-    <button class="ghostLink" id="overDiffBtn">Change difficulty</button>
+    <button class="ghostLink" id="overMenuBtn">Modes &amp; settings</button>
   </div>
 </div>
 
-<!-- Difficulty -->
-<div class="overlay" id="diffOverlay">
+<!-- Menu: modes + difficulty + settings -->
+<div class="overlay" id="menuOverlay">
   <div class="panel">
-    <h2>DIFFICULTY</h2>
-    <button class="diffRow" data-diff="easy">
-      <span><span class="dName">Easy</span><div class="dSub">5 colors &middot; open field</div></span>
-      <span class="dBest" id="bestEasy">0</span>
+    <h2>CONVERGENCE</h2>
+
+    <div class="secLabel">Mode</div>
+    <button class="diffRow" data-gmode="relax">
+      <span><span class="dName">Relax</span><div class="dSub">Endless &middot; no clock, no limit</div></span>
+      <span class="dBest" id="bestRelax">0</span>
     </button>
-    <button class="diffRow" data-diff="medium">
-      <span><span class="dName">Medium</span><div class="dSub">7 colors &middot; steady pressure</div></span>
-      <span class="dBest" id="bestMedium">0</span>
+    <button class="diffRow" data-gmode="attack">
+      <span><span class="dName">Score Attack</span><div class="dSub">30 shots &middot; 90 seconds</div></span>
+      <span class="dBest" id="bestAttack">0</span>
     </button>
-    <button class="diffRow" data-diff="hard">
-      <span><span class="dName">Hard</span><div class="dSub">9 colors &middot; full field</div></span>
-      <span class="dBest" id="bestHard">0</span>
+    <button class="diffRow" data-gmode="levels">
+      <span><span class="dName">Levels</span><div class="dSub">Clear the board to advance</div></span>
+      <span class="dBest" id="bestLevels">0</span>
     </button>
-    <button class="ghostLink" id="diffClose">Close</button>
+
+    <div class="secLabel">Difficulty</div>
+    <div class="segRow">
+      <button class="seg" data-diff="easy">Easy</button>
+      <button class="seg" data-diff="medium">Medium</button>
+      <button class="seg" data-diff="hard">Hard</button>
+    </div>
+
+    <div class="secLabel">Aim sensitivity</div>
+    <div class="sliderRow">
+      <span class="sEnd">Fine</span>
+      <input type="range" id="sensSlider" min="50" max="200" step="5" value="100">
+      <span class="sEnd">Quick</span>
+    </div>
+    <div class="sensHint" id="sensHint">Drag anywhere to aim &middot; lift to shoot</div>
+
+    <button class="primary" id="menuStart">Start</button>
+    <button class="ghostLink" id="menuClose">Close</button>
   </div>
 </div>
 
@@ -248,6 +307,13 @@ var DIFFS = {
   easy:   { cols: 9,  startRows: 5, colors: 5, rowEvery: 8, label:'Easy' },
   medium: { cols: 10, startRows: 6, colors: 7, rowEvery: 6, label:'Med'  },
   hard:   { cols: 11, startRows: 7, colors: 9, rowEvery: 5, label:'Hard' }
+};
+
+/* game modes */
+var MODES = {
+  relax:  { label:'Relax',  endless:true  },
+  attack: { label:'Attack', endless:false, shots:30, seconds:90 },
+  levels: { label:'Levels', endless:false }
 };
 
 /* palette: earthy, hand-painted — from the watercolor references.
@@ -294,8 +360,20 @@ function dur(ms){ return REDUCED ? Math.max(80, ms*0.35) : ms; }
 var memStore = {};
 function storeGet(k){ try { return localStorage.getItem(k); } catch(e){ return memStore[k]||null; } }
 function storeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){ memStore[k]=v; } }
-function getBest(diff){ return parseInt(storeGet('convergence-best-'+diff)||'0',10)||0; }
-function setBest(diff,v){ storeSet('convergence-best-'+diff, String(v)); }
+function getBest(diff, gmode){
+  gmode = gmode || state.gmode;
+  return parseInt(storeGet('convergence-best-'+gmode+'-'+diff)||'0',10)||0;
+}
+function setBest(diff,v,gmode){
+  gmode = gmode || state.gmode;
+  storeSet('convergence-best-'+gmode+'-'+diff, String(v));
+}
+function getSens(){
+  var v = parseInt(storeGet('convergence-sens')||'100',10);
+  if (!v || v < 50 || v > 200) v = 100;
+  return v;
+}
+function setSens(v){ storeSet('convergence-sens', String(v)); }
 
 /* ============================== helpers ============================== */
 
@@ -719,6 +797,11 @@ function drawBubble(x, y, val, scale, alpha){
 var state = {
   diff: (storeGet('convergence-diff')||'medium'),
   mode: (storeGet('convergence-mode')||'light'),
+  gmode: (storeGet('convergence-gmode')||'relax'),
+  level: 1,
+  shotsLeft: 0,
+  timeLeft: 0,
+  timerRunning: false,
   rows: [],            /* [{par, cells:[val|null,...]}] */
   score: 0,
   best: 0,
@@ -735,6 +818,8 @@ var state = {
   clearedStreak: 0
 };
 if (!DIFFS[state.diff]) state.diff = 'medium';
+if (!MODES[state.gmode]) state.gmode = 'relax';
+var SENS_MULT = getSens()/100;
 if (state.mode !== 'light' && state.mode !== 'dark') state.mode = 'light';
 applyModeChrome();
 function applyModeChrome(){
@@ -811,23 +896,57 @@ function makeRow(par, filled, colorCount){
   return { par: par, cells: cells };
 }
 
-function newGame(){
+/* level scaling for Levels mode: each level adds rows and tightens pressure */
+function levelParams(){
   var D = DIFFS[state.diff];
+  var L = state.level;
+  return {
+    cols: D.cols,
+    colors: D.colors,
+    startRows: Math.min(D.startRows + Math.floor((L-1)/2), 11),
+    rowEvery: Math.max(3, D.rowEvery - Math.floor((L-1)/3))
+  };
+}
+
+function activeParams(){
+  var D = DIFFS[state.diff];
+  if (state.gmode === 'levels') return levelParams();
+  return { cols:D.cols, colors:D.colors, startRows:D.startRows, rowEvery:D.rowEvery };
+}
+
+function buildBoard(P){
   state.rows = [];
-  var par = 0;
-  for (var r=0;r<D.startRows;r++){
-    state.rows.push(makeRow(par, true, D.colors));
+  var par = 0, r, e;
+  for (r=0;r<P.startRows;r++){
+    state.rows.push(makeRow(par, true, P.colors));
     par = 1-par;
   }
-  /* a few empty rows below for expansion */
-  for (var e=0;e<3;e++){ state.rows.push(makeRow(par, false, D.colors)); par = 1-par; }
-  state.score = 0;
+  for (e=0;e<3;e++){ state.rows.push(makeRow(par, false, P.colors)); par = 1-par; }
+}
+
+function newGame(keepLevel){
+  var M = MODES[state.gmode];
+  if (state.gmode !== 'levels' || !keepLevel) state.level = 1;
+  var P = activeParams();
+  buildBoard(P);
+  if (!keepLevel) state.score = 0;
   state.best = getBest(state.diff);
-  state.shotsUntilRow = D.rowEvery;
+  state.shotsUntilRow = P.rowEvery;
   state.over = false;
   state.proj = null;
   state.boardShift = 0;
   state.clearedStreak = 0;
+  state.levelClearing = false;
+  /* mode budgets */
+  if (state.gmode === 'attack'){
+    if (!keepLevel){
+      state.shotsLeft = M.shots;
+      state.timeLeft = M.seconds;
+    }
+    state.timerRunning = false;   /* starts on first shot */
+  } else {
+    state.shotsLeft = 0; state.timeLeft = 0; state.timerRunning = false;
+  }
   anims = [];
   state.ammo = rollAmmo();
   state.ammoNext = rollAmmo();
@@ -846,7 +965,10 @@ function rollAmmo(){
 /* ---------- firing ---------- */
 
 function fire(){
-  if (state.proj || state.over) return;
+  if (state.proj || state.over || state.levelClearing) return;
+  if (state.gmode === 'attack' && state.shotsLeft <= 0) return;
+  /* the clock starts when the player actually starts playing */
+  if (state.gmode === 'attack' && !state.timerRunning) state.timerRunning = true;
   var a = state.aimAngle;
   var speed = R * 52;
   state.proj = {
@@ -856,8 +978,10 @@ function fire(){
     vy: Math.sin(a)*speed,
     val: state.ammo
   };
+  if (state.gmode === 'attack') state.shotsLeft--;
   state.ammo = state.ammoNext;
   state.ammoNext = rollAmmo();
+  updateHud();
 }
 
 function stepProjectile(dt){
@@ -915,10 +1039,14 @@ function afterShot(){
   state.shotsUntilRow--;
   if (state.shotsUntilRow <= 0){
     addTopRow();
-    state.shotsUntilRow = DIFFS[state.diff].rowEvery;
+    state.shotsUntilRow = activeParams().rowEvery;
   }
   checkDanger();
   checkCleared();
+  /* Score Attack: out of shots ends the run (once the board settles) */
+  if (state.gmode === 'attack' && state.shotsLeft <= 0 && !state.over && !state.levelClearing){
+    setTimeout(function(){ if (!state.over) endGame('Out of shots'); }, dur(650));
+  }
   updateHud();
   needsRedraw = true;
 }
@@ -1058,27 +1186,40 @@ function pearlBlast(r, c, px, py){
 function checkCleared(){
   var any = false;
   forEachBubble(function(){ any = true; });
-  if (!any && !state.over){
-    addScore(50, W/2, H*0.35, 'field cleared');
-    var D = DIFFS[state.diff];
-    /* reseed after the dissolve settles */
-    setTimeout(function(){
-      var par = state.rows.length ? state.rows[0].par : 0;
-      state.rows = [];
-      var p = par;
-      for (var r=0;r<D.startRows;r++){ state.rows.push(makeRow(p, true, D.colors)); p=1-p; }
-      for (var e=0;e<3;e++){ state.rows.push(makeRow(p, false, 0)); p=1-p; }
-      needsRedraw = true;
-    }, dur(700));
+  if (!any && !state.over && !state.levelClearing){
+    if (state.gmode === 'levels'){
+      /* level complete: bank a bonus, advance, rebuild fuller board */
+      state.levelClearing = true;
+      var bonus = 50 + state.level*25;
+      addScore(bonus, W/2, H*0.34, 'level '+state.level+' clear');
+      setTimeout(function(){
+        state.level++;
+        newGame(true);            /* keep score, keep running */
+        state.levelClearing = false;
+        needsRedraw = true;
+      }, dur(1100));
+    } else {
+      addScore(50, W/2, H*0.35, 'field cleared');
+      var P = activeParams();
+      /* reseed after the dissolve settles */
+      setTimeout(function(){
+        var par = state.rows.length ? state.rows[0].par : 0;
+        state.rows = [];
+        var p = par;
+        for (var r=0;r<P.startRows;r++){ state.rows.push(makeRow(p, true, P.colors)); p=1-p; }
+        for (var e=0;e<3;e++){ state.rows.push(makeRow(p, false, 0)); p=1-p; }
+        needsRedraw = true;
+      }, dur(700));
+    }
   }
 }
 
 /* ---------- row pressure & game over ---------- */
 
 function addTopRow(){
-  var D = DIFFS[state.diff];
+  var P = activeParams();
   var par = 1 - state.rows[0].par;
-  state.rows.unshift(makeRow(par, true, D.colors));
+  state.rows.unshift(makeRow(par, true, P.colors));
   /* trim trailing fully-empty rows so array doesn't grow forever */
   while (state.rows.length > 40){
     var last = state.rows[state.rows.length-1];
@@ -1100,12 +1241,27 @@ function checkDanger(){
   if (overNow) endGame();
 }
 
-function endGame(){
+function endGame(reason){
   if (state.over) return;
   state.over = true;
+  state.timerRunning = false;
   var isNew = state.score > state.best;
   if (isNew){ state.best = state.score; setBest(state.diff, state.best); }
   document.getElementById('finalScore').textContent = state.score;
+
+  var head = document.getElementById('overTitle');
+  var lbl  = document.getElementById('finalLabel');
+  if (state.gmode === 'levels'){
+    if (head) head.textContent = 'RUN OVER';
+    if (lbl) lbl.innerHTML = 'Final score &middot; reached level ' + state.level;
+  } else if (state.gmode === 'attack'){
+    if (head) head.textContent = 'TIME CALLED';
+    if (lbl) lbl.textContent = reason || 'Final score';
+  } else {
+    if (head) head.textContent = 'GAME OVER';
+    if (lbl) lbl.textContent = 'Final score';
+  }
+
   var fb = document.getElementById('finalBest');
   fb.innerHTML = isNew ? '<span class="newBest">New best &middot; '+state.best+'</span>'
                        : 'Best &middot; '+state.best;
@@ -1155,7 +1311,7 @@ function onMove(ev){
   /* accumulate the delta since the LAST move — position is only a reference
      point, not an anchor, so travel is unbounded. one full screen-width of
      total drag sweeps the whole arc; do it in one stroke or several. */
-  var sens = (AIM_MAX - AIM_MIN) / (W * 0.82);
+  var sens = SENS_MULT * (AIM_MAX - AIM_MIN) / (W * 0.82);
   state.aimAngle = clamp(state.aimAngle + (p.x - lastMoveX) * sens, AIM_MIN, AIM_MAX);
   lastMoveX = p.x;
 }
@@ -1289,8 +1445,7 @@ function drawCannon(){
   ctx.restore();
 
   /* shots-until-row dots */
-  var D = DIFFS[state.diff];
-  var dots = D.rowEvery, on = state.shotsUntilRow;
+  var dots = activeParams().rowEvery, on = state.shotsUntilRow;
   var span = (dots-1)*10;
   ctx.save();
   for (var i=0;i<dots;i++){
@@ -1357,11 +1512,10 @@ function drawEffects(){
     }
     else if (a.kind === 'pearlRing'){
       ctx.save();
-      var hue = (t/30)%360;
-      ctx.strokeStyle = 'hsla('+hue+',40%,82%,'+(0.5*(1-p))+')';
+      ctx.strokeStyle = 'rgba(226,186,110,'+(0.55*(1-p))+')';
       ctx.lineWidth = 2 - p*1.4;
       ctx.beginPath(); ctx.arc(a.x, a.y, R*(1 + easeOut(p)*3.4), 0, Math.PI*2); ctx.stroke();
-      ctx.strokeStyle = 'rgba(253,249,239,'+(0.35*(1-p))+')';
+      ctx.strokeStyle = 'rgba(255,240,200,'+(0.35*(1-p))+')';
       ctx.beginPath(); ctx.arc(a.x, a.y, R*(0.6 + easeOut(p)*2.2), 0, Math.PI*2); ctx.stroke();
       ctx.restore();
     }
@@ -1385,6 +1539,16 @@ function loop(){
 
   if (state.proj) stepProjectile(dt);
 
+  /* Score Attack countdown */
+  if (state.gmode === 'attack' && state.timerRunning && !state.over){
+    state.timeLeft -= dt;
+    if (state.timeLeft <= 0){
+      state.timeLeft = 0;
+      endGame("Time's up");
+    }
+    updateHud();
+  }
+
   /* board settle-in easing */
   if (state.boardShift !== 0){
     var p = (t - state.boardShiftT0)/dur(480);
@@ -1400,26 +1564,51 @@ function loop(){
 
 var helpOverlay = document.getElementById('helpOverlay');
 var overOverlay = document.getElementById('overOverlay');
-var diffOverlay = document.getElementById('diffOverlay');
+var menuOverlay = document.getElementById('menuOverlay');
 
 function show(el){ el.classList.add('show'); }
 function hide(el){ el.classList.remove('show'); }
 function overlayOpen(){
   return helpOverlay.classList.contains('show') ||
          overOverlay.classList.contains('show') ||
-         diffOverlay.classList.contains('show');
+         menuOverlay.classList.contains('show');
+}
+
+function fmtTime(s){
+  s = Math.max(0, Math.ceil(s));
+  var m = Math.floor(s/60), ss = s%60;
+  return m + ':' + (ss<10?'0':'') + ss;
 }
 
 function updateHud(){
   document.getElementById('score').textContent = state.score;
   document.getElementById('best').textContent = 'Best ' + state.best;
-  document.getElementById('diffBtn').textContent = DIFFS[state.diff].label;
-  document.getElementById('bestEasy').textContent = getBest('easy');
-  document.getElementById('bestMedium').textContent = getBest('medium');
-  document.getElementById('bestHard').textContent = getBest('hard');
-  var rows = diffOverlay.querySelectorAll('.diffRow');
+
+  /* mode-specific status line where the title used to be */
+  var sl = document.getElementById('statusLine');
+  var urgent = false;
+  if (state.gmode === 'attack'){
+    sl.textContent = state.shotsLeft + ' shots \u00B7 ' + fmtTime(state.timeLeft);
+    urgent = (state.shotsLeft <= 5) || (state.timeLeft <= 15 && state.timerRunning);
+  } else if (state.gmode === 'levels'){
+    sl.textContent = 'Level ' + state.level;
+  } else {
+    sl.textContent = '';
+  }
+  sl.classList.toggle('urgent', urgent);
+
+  /* menu: per-mode bests at the current difficulty */
+  document.getElementById('bestRelax').textContent  = getBest(state.diff,'relax');
+  document.getElementById('bestAttack').textContent = getBest(state.diff,'attack');
+  document.getElementById('bestLevels').textContent = getBest(state.diff,'levels');
+
+  var rows = menuOverlay.querySelectorAll('.diffRow');
   for (var i=0;i<rows.length;i++){
-    rows[i].classList.toggle('current', rows[i].getAttribute('data-diff') === state.diff);
+    rows[i].classList.toggle('current', rows[i].getAttribute('data-gmode') === state.gmode);
+  }
+  var segs = menuOverlay.querySelectorAll('.seg');
+  for (var j=0;j<segs.length;j++){
+    segs[j].classList.toggle('on', segs[j].getAttribute('data-diff') === state.diff);
   }
 }
 
@@ -1435,23 +1624,56 @@ document.getElementById('helpBtn').addEventListener('click', function(){ show(he
 document.getElementById('helpClose').addEventListener('click', function(){ hide(helpOverlay); });
 document.getElementById('restartBtn').addEventListener('click', function(){ newGame(); });
 document.getElementById('againBtn').addEventListener('click', function(){ newGame(); });
-document.getElementById('diffBtn').addEventListener('click', function(){ updateHud(); show(diffOverlay); });
-document.getElementById('overDiffBtn').addEventListener('click', function(){ hide(overOverlay); updateHud(); show(diffOverlay); });
-document.getElementById('diffClose').addEventListener('click', function(){ hide(diffOverlay); });
+document.getElementById('menuBtn').addEventListener('click', function(){ updateHud(); show(menuOverlay); });
+document.getElementById('overMenuBtn').addEventListener('click', function(){ hide(overOverlay); updateHud(); show(menuOverlay); });
+document.getElementById('menuClose').addEventListener('click', function(){ hide(menuOverlay); });
+document.getElementById('menuStart').addEventListener('click', function(){
+  hide(menuOverlay);
+  resize();
+  newGame();
+});
 
+/* mode rows: select only (Start applies) */
 (function(){
-  var rows = diffOverlay.querySelectorAll('.diffRow');
+  var rows = menuOverlay.querySelectorAll('.diffRow');
   for (var i=0;i<rows.length;i++){
     rows[i].addEventListener('click', function(){
-      var d = this.getAttribute('data-diff');
-      hide(diffOverlay);
-      if (d !== state.diff){
-        state.diff = d;
-        storeSet('convergence-diff', d);
-        resize();      /* recompute R for new column count */
-      }
-      newGame();
+      var m = this.getAttribute('data-gmode');
+      if (!MODES[m]) return;
+      state.gmode = m;
+      storeSet('convergence-gmode', m);
+      state.best = getBest(state.diff);
+      updateHud();
     });
+  }
+  var segs = menuOverlay.querySelectorAll('.seg');
+  for (var j=0;j<segs.length;j++){
+    segs[j].addEventListener('click', function(){
+      var d = this.getAttribute('data-diff');
+      if (!DIFFS[d]) return;
+      state.diff = d;
+      storeSet('convergence-diff', d);
+      state.best = getBest(state.diff);
+      updateHud();
+    });
+  }
+  var sl = document.getElementById('sensSlider');
+  if (sl){
+    sl.value = getSens();
+    var apply = function(){
+      var v = parseInt(sl.value,10)||100;
+      SENS_MULT = v/100;
+      setSens(v);
+      var hint = document.getElementById('sensHint');
+      if (hint){
+        hint.textContent = v < 85 ? 'Fine control \u00B7 longer drags'
+                         : v > 130 ? 'Quick turns \u00B7 shorter drags'
+                                   : 'Balanced';
+      }
+    };
+    sl.addEventListener('input', apply);
+    sl.addEventListener('change', apply);
+    apply();
   }
 })();
 
@@ -1473,9 +1695,11 @@ resize();
 newGame();
 loop();
 
-/* gentle first-visit hint */
+/* first visit: open the menu so the modes are discoverable */
 if (!storeGet('convergence-seen')){
   storeSet('convergence-seen','1');
+  updateHud();
+  show(menuOverlay);
 }
 
 })();
